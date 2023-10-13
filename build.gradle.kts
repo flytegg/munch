@@ -20,10 +20,10 @@ tasks {
         dependsOn(shadowJar)
     }
 
-    compileJava {
+    /*compileJava {
         options.encoding = Charsets.UTF_8.name()
-        options.release.set(17)
-    }
+        options.release.set(21)
+    }*/
 
     shadowJar {
         val `package` = "gg.flyte.twilight.shaded"
