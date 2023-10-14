@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "1.9.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
+    application
 }
 
 group = "gg.joshbaker"
@@ -12,7 +13,10 @@ repositories {
 
 dependencies {
     implementation("org.mongodb:mongodb-driver-sync:4.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+}
+
+application {
+    mainClass.set("gg.joshbaker.munch.Test")
 }
 
 tasks {
@@ -20,10 +24,10 @@ tasks {
         dependsOn(shadowJar)
     }
 
-    /*compileJava {
+    compileJava {
         options.encoding = Charsets.UTF_8.name()
-        options.release.set(21)
-    }*/
+        options.release.set(17)
+    }
 
     shadowJar {
         val `package` = "gg.flyte.twilight.shaded"

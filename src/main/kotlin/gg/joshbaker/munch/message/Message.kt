@@ -5,22 +5,32 @@ import org.bson.Document
 import java.util.*
 
 data class Message(
-    private val uid: UUID = UUID.randomUUID(),
+    val uid: UUID = UUID.randomUUID(),
     val destinations: List<UUID>,
     var sender: UUID? = null,
     val header: String,
-    val content: String
+    val content: String,
 ) {
     fun asDocument(): Document {
         return Document().apply {
             this["_id"] = uid.toString()
             this["destinations"] = destinations.asStringList()
+            this["sender"] = sender.toString()
             this["header"] = header.uppercase()
             this["content"] = content
         }
     }
 
     fun isGlobal() = Munch.NULL_UUID in destinations
+
+    class Header {
+        companion object {
+            const val MUNCH_HANDSHAKE_CONNECT = "MUNCH_HANDSHAKE_CONNECT"
+            const val MUNCH_HANDSHAKE_CONFIRM = "MUNCH_HANDSHAKE_CONFIRM"
+            const val MUNCH_HANDSHAKE_KEEPALIVE = "MUNCH_HANDSHAKE_KEEPALIVE"
+            const val MUNCH_HANDSHAKE_END = "MUNCH_HANDSHAKE_END"
+        }
+    }
 
     class Builder(init: Builder.() -> Unit) {
         init {

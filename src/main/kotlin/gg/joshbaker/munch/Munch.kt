@@ -16,24 +16,25 @@ import java.util.concurrent.TimeUnit
 import kotlin.properties.Delegates
 
 
-class Munch(
+class Munch private constructor(
     private val collection: MongoCollection<Document>,
     val server: Server,
-    handler: MessageHandler
+    handler: MessageHandler,
+    private val publisherPeriod: Long,
+    private val subscriberPeriod: Long,
+    val messageLifetime: Long,
 ) {
-    private val defaultHandler: MessageHandler
-
+    private val defaultHandler: DefaultMessageHandler
     private val messageQueue: Queue<Message> = LinkedList()
 
     fun message(builder: Message.Builder.() -> Unit) {
         messageQueue += Message.Builder(builder).build().apply { sender = server.uid }
-        println(messageQueue)
     }
 
     init {
         defaultHandler = DefaultMessageHandler(this, handler)
         message {
-            header = "HANDSHAKE_CONNECT"
+            header = Message.Header.MUNCH_HANDSHAKE_CONNECT
             content = server.name
         }
     }
@@ -44,39 +45,31 @@ class Munch(
     fun start() {
         publisher = Executors.newSingleThreadScheduledExecutor().apply {
             scheduleAtFixedRate({
-                println("pub")
-                messageQueue.poll()?.let { collection.insertOne(it.asDocument()) }
-            }, 0L, 50L, TimeUnit.MILLISECONDS)
+                messageQueue.poll()?.let {
+                    println("[${server.name} - ${server.uid}] Published $it")
+                    collection.insertOne(it.asDocument())
+                }
+            }, 0L, publisherPeriod, TimeUnit.MILLISECONDS)
         }
 
-        /*
-         Subscriber is blocking and not continuing to run?
-
-         Assume the Document.asMessage() call is producing errors but they are consumed by the executor service so not shown in terminal
-         */
         subscriber = Executors.newSingleThreadScheduledExecutor().apply {
             scheduleAtFixedRate({
-                println("sub")
-                collection.find(
-                    /*and(
-                        eq("sender", server.uid.toString()),
-                        not(elemMatch("destinations", eq("\$in", server.uid.toString())))
-                    )*/
-                ).first()?.let {
-                    defaultHandler.handle(it.asMessage())
-                }
-            }, 0L, 50L, TimeUnit.MILLISECONDS)
+                collection.find().forEach { defaultHandler.handle(it.asMessage()) }
+            }, 0L, subscriberPeriod, TimeUnit.MILLISECONDS)
         }
     }
 
     fun stop() {
+        message {
+            header = Message.Header.MUNCH_HANDSHAKE_END
+            content = "Muncher disconnected"
+        }
         publisher?.shutdown()
         subscriber?.shutdown()
+        defaultHandler.stop()
     }
 
-    fun clean(uid: String) {
-        collection.deleteOne(eq("_id", uid))
-    }
+    fun clean(uid: String) = collection.deleteOne(eq("_id", uid))
 
     companion object {
         val NULL_UUID = UUID(0, 0)
@@ -97,6 +90,9 @@ class Munch(
 
         var handler by Delegates.notNull<MessageHandler>()
         var server by Delegates.notNull<String>()
+        var publisherPeriod = 1L
+        var subscriberPeriod = 1L
+        var messageLifetime = 500L
 
         init {
             apply(init)
@@ -105,50 +101,7 @@ class Munch(
         fun build(): Munch {
             val collection = MongoClients.create(mongo.uri).getDatabase(mongo.database).getCollection(mongo.collection)
             val server = Server(UUID.randomUUID(), server)
-            Server.servers += server.uid to server
-
-            return Munch(collection, server, handler)
+            return Munch(collection, server, handler, publisherPeriod, subscriberPeriod, messageLifetime)
         }
     }
 }
-
-/*private var subscriber: ScheduledExecutorService? = null
-private var publisher: ScheduledExecutorService? = null
-
-fun start() {
-    subscriber = Executors.newSingleThreadScheduledExecutor().apply {
-        scheduleAtFixedRate({
-            while (true) {
-                collection.find(Filters.eq("destination", )).first()?.let {
-                    packetHandler.handle(it.asPacket())
-                    collection.deleteOne(it)
-                }
-                sleep(50)
-            }
-        }, 0L, 50L, TimeUnit.MILLISECONDS)
-    }
-
-    publisher = Executors.newSingleThreadScheduledExecutor().apply {
-        scheduleAtFixedRate({
-            while (true) {
-                queue.poll()?.let {
-                    collection.insertOne(it.asDocument())
-                    println("published packet $it")
-                }
-                sleep(50)
-            }
-        }, 0L, 50L, TimeUnit.MILLISECONDS)
-    }
-}
-
-fun close() {
-    subscriber?.shutdown()
-    publisher?.shutdown()
-}
-
-private val queue: Queue<Packet> = LinkedList()
-
-fun queue(vararg packets: Packet) {
-    queue.addAll(packets)
-}
-}*/
