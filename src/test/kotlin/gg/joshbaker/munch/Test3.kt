@@ -11,25 +11,18 @@ fun main() {
             collection = "messages"
         }
         handler = TestMessageHandler
-        server = "test01"
+        server = "test03"
+
+        publisherPeriod = 1000
+        subscriberPeriod = 1000
     }.build()
 
     munch.start()
 
-    /*munch.message {
+    munch.message {
         header = "test"
         content = "asdasdasd"
-    }*/
+    }
 
     //munch.stop()
-}
-
-object TestMessageHandler : MessageHandler {
-    override fun handle(message: Message) {
-        when (message.header) {
-            "TEST" -> {
-                println("received test message after ${System.currentTimeMillis() - message.content.toLong()}ms")
-            }
-        }
-    }
 }
