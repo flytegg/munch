@@ -1,13 +1,13 @@
-package gg.joshbaker.munch
+package gg.flyte.munch
 
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Filters.eq
-import gg.joshbaker.munch.message.DefaultMessageHandler
-import gg.joshbaker.munch.message.Message
-import gg.joshbaker.munch.message.MessageHandler
-import gg.joshbaker.munch.message.asMessage
-import gg.joshbaker.munch.server.Server
+import gg.flyte.munch.message.DefaultMessageHandler
+import gg.flyte.munch.message.Message
+import gg.flyte.munch.message.MessageHandler
+import gg.flyte.munch.message.asMessage
+import gg.flyte.munch.server.Server
 import org.bson.Document
 import java.util.*
 import java.util.concurrent.Executors

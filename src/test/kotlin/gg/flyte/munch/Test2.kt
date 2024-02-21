@@ -1,4 +1,4 @@
-package gg.joshbaker.munch
+package gg.flyte.munch
 
 fun main() {
     val munch: Munch = Munch.Builder {

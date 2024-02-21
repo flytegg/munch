@@ -1,7 +1,7 @@
-package gg.joshbaker.munch
+package gg.flyte.munch
 
-import gg.joshbaker.munch.message.Message
-import gg.joshbaker.munch.message.MessageHandler
+import gg.flyte.munch.message.Message
+import gg.flyte.munch.message.MessageHandler
 
 fun main() {
     val munch: Munch = Munch.Builder {

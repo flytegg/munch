@@ -1,7 +1,7 @@
-package gg.joshbaker.munch.message
+package gg.flyte.munch.message
 
-import gg.joshbaker.munch.Munch
-import gg.joshbaker.munch.Munch.Companion.log
+import gg.flyte.munch.Munch
+import gg.flyte.munch.Munch.Companion.log
 import org.bson.Document
 import java.util.*
 

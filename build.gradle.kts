@@ -1,12 +1,12 @@
 plugins {
     kotlin("jvm") version "1.9.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
-    application
+    id("application")
     id("maven-publish")
 }
 
-group = "gg.joshbaker"
-version = "1.0-SNAPSHOT"
+group = "gg.flyte"
+version = "0.0.1-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -17,7 +17,7 @@ dependencies {
 }
 
 application {
-    mainClass.set("gg.joshbaker.munch.Test")
+    mainClass.set("gg.flyte.munch.Test")
 }
 
 tasks {
@@ -25,26 +25,13 @@ tasks {
         dependsOn(shadowJar)
     }
 
-    compileJava {
-        options.encoding = Charsets.UTF_8.name()
-        options.release.set(17)
-    }
-
     shadowJar {
-        val `package` = "gg.flyte.twilight.shaded"
+        val `package` = "gg.flyte.munch.shaded"
         relocate("kotlin", "$`package`.kotlin")
         relocate("com.mongodb", "$`package`.mongodb")
         relocate("org.bson", "$`package`.bson")
         relocate("org.intellij", "$`package`.intellij")
         relocate("org.jetbrains", "$`package`.jetbrains")
-    }
-
-    javadoc {
-        options.encoding = Charsets.UTF_8.name()
-    }
-
-    processResources {
-        filteringCharset = Charsets.UTF_8.name()
     }
 }
 

@@ -1,4 +1,4 @@
-package gg.joshbaker.munch.server
+package gg.flyte.munch.server
 
 import java.util.*
 

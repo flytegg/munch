@@ -1,9 +1,9 @@
-package gg.joshbaker.munch.message
+package gg.flyte.munch.message
 
-import gg.joshbaker.munch.Munch
-import gg.joshbaker.munch.Munch.Companion.log
-import gg.joshbaker.munch.exception.MalformedMessageException
-import gg.joshbaker.munch.server.Server
+import gg.flyte.munch.Munch
+import gg.flyte.munch.Munch.Companion.log
+import gg.flyte.munch.exception.MalformedMessageException
+import gg.flyte.munch.server.Server
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
