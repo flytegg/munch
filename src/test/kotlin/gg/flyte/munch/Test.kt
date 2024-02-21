@@ -2,11 +2,13 @@ package gg.flyte.munch
 
 import gg.flyte.munch.message.Message
 import gg.flyte.munch.message.MessageHandler
+import io.github.cdimascio.dotenv.Dotenv
 
 fun main() {
+    val env = Dotenv.load()
     val munch: Munch = Munch.Builder {
         mongo {
-            uri = "mongodb://localhost:27017"
+            uri = env.get("MONGO_URI")
             database = "munch-test"
             collection = "messages"
         }
