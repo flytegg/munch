@@ -2,63 +2,37 @@ package gg.flyte.munch
 
 import com.mongodb.client.MongoClients
 import com.mongodb.client.MongoCollection
-import com.mongodb.client.model.Filters.eq
-import gg.flyte.munch.message.DefaultMessageHandler
 import gg.flyte.munch.message.Message
 import gg.flyte.munch.message.MessageHandler
-import gg.flyte.munch.message.asMessage
+import gg.flyte.munch.message.MessagePublisher
+import gg.flyte.munch.message.MessageSubscriber
 import gg.flyte.munch.server.Server
 import org.bson.Document
 import java.util.*
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.CompletableFuture.delayedExecutor
-import java.util.concurrent.Executors
-import java.util.concurrent.ScheduledExecutorService
-import java.util.concurrent.TimeUnit
 import kotlin.properties.Delegates
 
 class Munch private constructor(
     private val collection: MongoCollection<Document>,
     val server: Server,
-    handler: MessageHandler,
-    private val publisherPeriod: Long,
-    private val subscriberPeriod: Long,
-    val messageLifetime: Long,
+    val handler: MessageHandler = MessageHandler(),
+    private val publisherSettings: Builder.PublisherSettings,
+    private val subscriberSettings: Builder.SubscriberSettings,
 ) {
-    private val defaultHandler: DefaultMessageHandler
-    private val messageQueue: Queue<Message> = LinkedList()
-
-    fun message(builder: Message.Builder.() -> Unit) {
-        messageQueue += Message.Builder(builder).build().apply { sender = server.id }
-    }
+    private val publisher: MessagePublisher = MessagePublisher(collection, handler, publisherSettings)
+    private val subscriber: MessageSubscriber = MessageSubscriber(collection, handler, subscriberSettings)
 
     init {
         Companion.server = server
-        defaultHandler = DefaultMessageHandler(this, handler)
+        handler.injectMunch(this)
         message {
             header = Message.Header.MUNCH_HANDSHAKE_CONNECT
             content = server.name
         }
     }
 
-    private var publisher: ScheduledExecutorService? = null
-    private var subscriber: ScheduledExecutorService? = null
-
     fun start() {
-        publisher = Executors.newSingleThreadScheduledExecutor().apply {
-            scheduleAtFixedRate({
-                messageQueue.poll()?.let {
-                    log("Published $it")
-                    collection.insertOne(it.asDocument())
-                }
-            }, 0L, publisherPeriod, TimeUnit.MILLISECONDS)
-        }
-
-        subscriber = Executors.newSingleThreadScheduledExecutor().apply {
-            scheduleAtFixedRate({
-                collection.find().forEach { defaultHandler.handle(it.asMessage()) }
-            }, 0L, subscriberPeriod, TimeUnit.MILLISECONDS)
-        }
+        publisher.start()
+        subscriber.start()
     }
 
     fun stop() {
@@ -66,29 +40,19 @@ class Munch private constructor(
             header = Message.Header.MUNCH_HANDSHAKE_END
             content = "Muncher disconnected"
         }
-        subscriber?.shutdown()
-        defaultHandler.stop()
-        waitForEmptyQueue().thenRun { publisher?.shutdown() }
+        publisher.stop()
+        subscriber.stop()
+        handler.stop()
     }
 
-    private fun waitForEmptyQueue(): CompletableFuture<Void> = with(CompletableFuture<Void>()) {
-        fun check() {
-            if (messageQueue.isNotEmpty()) delayedExecutor(100, TimeUnit.MILLISECONDS).execute { check() }
-            else complete(null)
-        }
-
-        check()
-
-        this
-    }
+    fun message(builder: Message.Builder.() -> Unit) =
+        publisher.queue(Message.Builder(builder).build().apply { sender = server.id })
 
     fun terminate() {
-        publisher?.shutdown()
-        subscriber?.shutdown()
-        defaultHandler.stop()
+        publisher.terminate()
+        subscriber.stop()
+        handler.stop()
     }
-
-    fun clean(uid: String) = collection.deleteOne(eq("_id", uid))
 
     companion object {
         val NULL_UUID = UUID(0, 0)
@@ -112,20 +76,36 @@ class Munch private constructor(
             mongo = Mongo().apply(init)
         }
 
+        inner class PublisherSettings {
+            var period = 1L
+            var messageLifetime = 500L
+        }
+
+        fun publisher(init: PublisherSettings.() -> Unit) = PublisherSettings().apply(init)
+
+        inner class SubscriberSettings {
+            var period = 1L
+        }
+
+        fun subscriber(init: SubscriberSettings.() -> Unit) = SubscriberSettings().apply(init)
+
         var handler by Delegates.notNull<MessageHandler>()
         var server by Delegates.notNull<String>()
-        var publisherPeriod = 1L
-        var subscriberPeriod = 1L
-        var messageLifetime = 500L
+        private var publisherSettings: PublisherSettings? = null
+        private var subscriberSettings: SubscriberSettings? = null
 
         init {
             apply(init)
         }
 
         fun build(): Munch {
-            val collection = MongoClients.create(mongo.uri).getDatabase(mongo.database).getCollection(mongo.collection)
-            val server = Server(UUID.randomUUID(), server)
-            return Munch(collection, server, handler, publisherPeriod, subscriberPeriod, messageLifetime)
+            return Munch(
+                collection = MongoClients.create(mongo.uri).getDatabase(mongo.database).getCollection(mongo.collection),
+                server = Server(UUID.randomUUID(), server),
+                handler = handler,
+                publisherSettings = publisherSettings ?: PublisherSettings(),
+                subscriberSettings = subscriberSettings ?: SubscriberSettings()
+            )
         }
     }
 }

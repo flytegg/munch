@@ -10,11 +10,17 @@ fun main() {
             database = "munch-test"
             collection = "messages"
         }
+
         handler = TestMessageHandler
         server = "test03"
 
-        publisherPeriod = 1000
-        subscriberPeriod = 1000
+        publisher {
+            period = 1000
+            messageLifetime = 500
+        }
+        subscriber {
+            period = 1000
+        }
     }.build()
 
     munch.start()

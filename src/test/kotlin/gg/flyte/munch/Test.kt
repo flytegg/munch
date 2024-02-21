@@ -26,7 +26,7 @@ fun main() {
     //munch.stop()
 }
 
-object TestMessageHandler : MessageHandler {
+object TestMessageHandler : MessageHandler() {
     override fun handle(message: Message) {
         when (message.header) {
             "TEST" -> {

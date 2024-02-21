@@ -16,15 +16,15 @@ fun main() {
 
     munch.start()
 
-/*    munch.message {
+    munch.message {
         header = "TEST"
         content = System.currentTimeMillis().toString()
-    }*/
+    }
 
     /*munch.message {
         header = "test"
         content = "asdasdasd"
-    }
+    }*/
 
-    munch.stop()*/
+    munch.stop()
 }
