@@ -82,6 +82,12 @@ class Munch private constructor(
         this
     }
 
+    fun terminate() {
+        publisher?.shutdown()
+        subscriber?.shutdown()
+        defaultHandler.stop()
+    }
+
     fun clean(uid: String) = collection.deleteOne(eq("_id", uid))
 
     companion object {
