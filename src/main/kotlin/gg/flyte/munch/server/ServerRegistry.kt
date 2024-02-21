@@ -5,7 +5,7 @@ import java.util.*
 object ServerRegistry {
     private val servers = mutableMapOf<UUID, Server>()
 
-    fun register(id: UUID, name: String) = servers.put(id, Server(id, name))
+    fun register(id: UUID, name: String): Server = Server(id, name).also { servers += id to it }
 
     fun unregister(id: UUID) = servers.remove(id)
 
