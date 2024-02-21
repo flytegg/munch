@@ -3,6 +3,6 @@ package gg.flyte.munch.server
 import java.util.*
 
 data class Server(
-    val uid: UUID,
+    val id: UUID,
     var name: String = "Unknown server"
 )

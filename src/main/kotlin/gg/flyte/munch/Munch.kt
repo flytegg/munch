@@ -29,7 +29,7 @@ class Munch private constructor(
     private val messageQueue: Queue<Message> = LinkedList()
 
     fun message(builder: Message.Builder.() -> Unit) {
-        messageQueue += Message.Builder(builder).build().apply { sender = server.uid }
+        messageQueue += Message.Builder(builder).build().apply { sender = server.id }
     }
 
     init {
@@ -95,7 +95,7 @@ class Munch private constructor(
         private lateinit var server: Server
 
         fun log(message: Any) {
-            println("[${server.name} - ${server.uid}] $message")
+            println("[${server.name} - ${server.id}] $message")
         }
     }
 

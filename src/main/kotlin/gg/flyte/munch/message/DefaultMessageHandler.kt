@@ -3,7 +3,9 @@ package gg.flyte.munch.message
 import gg.flyte.munch.Munch
 import gg.flyte.munch.Munch.Companion.log
 import gg.flyte.munch.exception.MalformedMessageException
+import gg.flyte.munch.exception.UnknownServerException
 import gg.flyte.munch.server.Server
+import gg.flyte.munch.server.ServerRegistry
 import java.util.*
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -30,24 +32,22 @@ class DefaultMessageHandler(
         }, munch.messageLifetime, TimeUnit.MILLISECONDS)
 
         val sender = message.sender ?: throw MalformedMessageException()
-        if (sender == munch.server.uid) return
-        if (!message.isGlobal() && munch.server.uid !in message.destinations) return
+        if (sender == munch.server.id) return
+        if (!message.isGlobal() && munch.server.id !in message.destinations) return
 
         when (message.header) {
             Message.Header.MUNCH_HANDSHAKE_CONNECT -> {
-                val server = Server(message.sender ?: throw MalformedMessageException(), message.content)
-                Server.servers += server.uid to server
+                val server = ServerRegistry.register(id = sender, name = message.content)
                 log("[DefaultMessageHandler - MUNCH_HANDSHAKE_CONNECT] Discovered new Muncher: $server")
                 munch.message {
-                    destinations = setOf(server.uid)
+                    destinations = setOf(server.id)
                     header = Message.Header.MUNCH_HANDSHAKE_CONFIRM
                     content = munch.server.name
                 }
             }
 
             Message.Header.MUNCH_HANDSHAKE_CONFIRM -> {
-                val server = Server(message.sender ?: throw MalformedMessageException(), message.content)
-                Server.servers += server.uid to server
+                val server = ServerRegistry.register(id = sender, name = message.content)
                 log("[DefaultMessageHandler - MUNCH_HANDSHAKE_CONFIRM] Discovered new Muncher: $server")
             }
 
