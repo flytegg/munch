@@ -1,12 +1,13 @@
 package gg.joshbaker.munch.message
 
 import gg.joshbaker.munch.Munch
+import gg.joshbaker.munch.Munch.Companion.log
 import org.bson.Document
 import java.util.*
 
 data class Message(
     val uid: UUID = UUID.randomUUID(),
-    val destinations: List<UUID>,
+    val destinations: Set<UUID>,
     var sender: UUID? = null,
     val header: String,
     val content: String,
@@ -14,7 +15,7 @@ data class Message(
     fun asDocument(): Document {
         return Document().apply {
             this["_id"] = uid.toString()
-            this["destinations"] = destinations.asStringList()
+            this["destinations"] = destinations.asStringSet()
             this["sender"] = sender.toString()
             this["header"] = header.uppercase()
             this["content"] = content
@@ -37,30 +38,35 @@ data class Message(
             apply(init)
         }
 
-        var destinations: List<UUID> = emptyList()
+        var destinations: Set<UUID>? = null
         var header: String? = null
         var content: String? = null
 
-        fun build() = Message(
-            destinations = destinations.takeIf { it.isNotEmpty() } ?: listOf(Munch.NULL_UUID),
-            header = header ?: throw IllegalStateException("header is null. All fields must be initialized."),
-            content = content ?: throw IllegalStateException("content is null. All fields must be initialized.")
-        )
+        fun build(): Message {
+            log("Building message with destinations: $destinations, header: $header, content: $content")
+
+            val message = Message(
+                destinations = destinations.takeIf { !it.isNullOrEmpty() } ?: setOf(Munch.NULL_UUID),
+                header = header ?: throw IllegalStateException("header is null. All fields must be initialized."),
+                content = content ?: throw IllegalStateException("content is null. All fields must be initialized.")
+            )
+            return message
+        }
     }
 }
 
-fun List<UUID>.asStringList(): List<String> {
-    return map { it.toString() }
+fun Set<UUID>.asStringSet(): Set<String> {
+    return map { it.toString() }.toSet()
 }
 
-fun List<String>.asUUIDList(): List<UUID> {
-    return map { UUID.fromString(it) }
+fun List<String>.asUUIDSet(): Set<UUID> {
+    return map { UUID.fromString(it) }.toSet()
 }
 
 fun Document.asMessage(): Message {
     return Message(
         uid = UUID.fromString(getString("_id")),
-        destinations = getList("destinations", String::class.java).asUUIDList(),
+        destinations = getList("destinations", String::class.java).asUUIDSet(),
         sender = UUID.fromString(getString("sender")),
         header = getString("header"),
         content = getString("content")

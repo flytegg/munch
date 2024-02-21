@@ -1,6 +1,7 @@
 package gg.joshbaker.munch.message
 
 import gg.joshbaker.munch.Munch
+import gg.joshbaker.munch.Munch.Companion.log
 import gg.joshbaker.munch.exception.MalformedMessageException
 import gg.joshbaker.munch.server.Server
 import java.util.*
@@ -32,16 +33,14 @@ class DefaultMessageHandler(
         if (sender == munch.server.uid) return
         if (!message.isGlobal() && munch.server.uid !in message.destinations) return
 
-        println("[DefaultMessageHandler] Received: $message")
-
         when (message.header) {
             Message.Header.MUNCH_HANDSHAKE_CONNECT -> {
                 val server = Server(message.sender ?: throw MalformedMessageException(), message.content)
                 Server.servers += server.uid to server
-                println(Server.servers)
-                println("[DefaultMessageHandler - MUNCH_HANDSHAKE_CONNECT] Discovered new Muncher: $server")
+                log(Server.servers)
+                log("[DefaultMessageHandler - MUNCH_HANDSHAKE_CONNECT] Discovered new Muncher: $server")
                 munch.message {
-                    destinations = listOf(server.uid)
+                    destinations = setOf(server.uid)
                     header = Message.Header.MUNCH_HANDSHAKE_CONFIRM
                     content = munch.server.name
                 }
@@ -50,8 +49,8 @@ class DefaultMessageHandler(
             Message.Header.MUNCH_HANDSHAKE_CONFIRM -> {
                 val server = Server(message.sender ?: throw MalformedMessageException(), message.content)
                 Server.servers += server.uid to server
-                println(Server.servers)
-                println("[DefaultMessageHandler - MUNCH_HANDSHAKE_CONFIRM] Discovered new Muncher: $server")
+                log(Server.servers)
+                log("[DefaultMessageHandler - MUNCH_HANDSHAKE_CONFIRM] Discovered new Muncher: $server")
             }
 
             else -> providedHandler.handle(message)
