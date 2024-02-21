@@ -2,6 +2,7 @@ plugins {
     kotlin("jvm") version "1.9.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     application
+    id("maven-publish")
 }
 
 group = "gg.joshbaker"
@@ -49,4 +50,33 @@ tasks {
 
 kotlin {
     jvmToolchain(17)
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "flyte-repository"
+            url = uri(
+                "https://repo.flyte.gg/${
+                    if (version.toString().endsWith("-SNAPSHOT")) "snapshots" else "releases"
+                }"
+            )
+            credentials {
+                username = System.getenv("MAVEN_NAME") ?: property("mavenUser").toString()
+                password = System.getenv("MAVEN_SECRET") ?: property("mavenPassword").toString()
+            }
+        }
+    }
+
+    publishing {
+        publications {
+            create<MavenPublication>("maven") {
+                groupId = group.toString()
+                artifactId = "munch"
+                version = version.toString()
+
+                from(components["java"])
+            }
+        }
+    }
 }
