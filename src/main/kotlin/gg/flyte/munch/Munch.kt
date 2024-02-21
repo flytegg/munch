@@ -10,6 +10,8 @@ import gg.flyte.munch.message.asMessage
 import gg.flyte.munch.server.Server
 import org.bson.Document
 import java.util.*
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.CompletableFuture.delayedExecutor
 import java.util.concurrent.Executors
 import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
@@ -46,7 +48,7 @@ class Munch private constructor(
         publisher = Executors.newSingleThreadScheduledExecutor().apply {
             scheduleAtFixedRate({
                 messageQueue.poll()?.let {
-                   log("Published $it")
+                    log("Published $it")
                     collection.insertOne(it.asDocument())
                 }
             }, 0L, publisherPeriod, TimeUnit.MILLISECONDS)
@@ -64,9 +66,20 @@ class Munch private constructor(
             header = Message.Header.MUNCH_HANDSHAKE_END
             content = "Muncher disconnected"
         }
-        publisher?.shutdown()
         subscriber?.shutdown()
         defaultHandler.stop()
+        waitForEmptyQueue().thenRun { publisher?.shutdown() }
+    }
+
+    private fun waitForEmptyQueue(): CompletableFuture<Void> = with(CompletableFuture<Void>()) {
+        fun check() {
+            if (messageQueue.isNotEmpty()) delayedExecutor(100, TimeUnit.MILLISECONDS).execute { check() }
+            else complete(null)
+        }
+
+        check()
+
+        this
     }
 
     fun clean(uid: String) = collection.deleteOne(eq("_id", uid))
