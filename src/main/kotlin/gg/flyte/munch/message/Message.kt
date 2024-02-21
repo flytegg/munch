@@ -1,7 +1,6 @@
 package gg.flyte.munch.message
 
 import gg.flyte.munch.Munch
-import gg.flyte.munch.Munch.Companion.log
 import org.bson.Document
 import java.util.*
 
@@ -42,16 +41,11 @@ data class Message(
         var header: String? = null
         var content: String? = null
 
-        fun build(): Message {
-            log("Building message with destinations: $destinations, header: $header, content: $content")
-
-            val message = Message(
-                destinations = destinations.takeIf { !it.isNullOrEmpty() } ?: setOf(Munch.NULL_UUID),
-                header = header ?: throw IllegalStateException("header is null. All fields must be initialized."),
-                content = content ?: throw IllegalStateException("content is null. All fields must be initialized.")
-            )
-            return message
-        }
+        fun build() = Message(
+            destinations = destinations.takeIf { !it.isNullOrEmpty() } ?: setOf(Munch.NULL_UUID),
+            header = header ?: throw IllegalStateException("header is null. All fields must be initialized."),
+            content = content ?: throw IllegalStateException("content is null. All fields must be initialized.")
+        )
     }
 }
 
