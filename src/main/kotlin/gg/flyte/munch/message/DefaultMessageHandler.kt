@@ -37,7 +37,6 @@ class DefaultMessageHandler(
             Message.Header.MUNCH_HANDSHAKE_CONNECT -> {
                 val server = Server(message.sender ?: throw MalformedMessageException(), message.content)
                 Server.servers += server.uid to server
-                log(Server.servers)
                 log("[DefaultMessageHandler - MUNCH_HANDSHAKE_CONNECT] Discovered new Muncher: $server")
                 munch.message {
                     destinations = setOf(server.uid)
@@ -49,7 +48,6 @@ class DefaultMessageHandler(
             Message.Header.MUNCH_HANDSHAKE_CONFIRM -> {
                 val server = Server(message.sender ?: throw MalformedMessageException(), message.content)
                 Server.servers += server.uid to server
-                log(Server.servers)
                 log("[DefaultMessageHandler - MUNCH_HANDSHAKE_CONFIRM] Discovered new Muncher: $server")
             }
 
