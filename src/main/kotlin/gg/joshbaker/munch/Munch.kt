@@ -15,7 +15,6 @@ import java.util.concurrent.ScheduledExecutorService
 import java.util.concurrent.TimeUnit
 import kotlin.properties.Delegates
 
-
 class Munch private constructor(
     private val collection: MongoCollection<Document>,
     val server: Server,
@@ -32,6 +31,7 @@ class Munch private constructor(
     }
 
     init {
+        Companion.server = server
         defaultHandler = DefaultMessageHandler(this, handler)
         message {
             header = Message.Header.MUNCH_HANDSHAKE_CONNECT
@@ -46,7 +46,7 @@ class Munch private constructor(
         publisher = Executors.newSingleThreadScheduledExecutor().apply {
             scheduleAtFixedRate({
                 messageQueue.poll()?.let {
-                    println("[${server.name} - ${server.uid}] Published $it")
+                   log("Published $it")
                     collection.insertOne(it.asDocument())
                 }
             }, 0L, publisherPeriod, TimeUnit.MILLISECONDS)
@@ -73,6 +73,11 @@ class Munch private constructor(
 
     companion object {
         val NULL_UUID = UUID(0, 0)
+        private lateinit var server: Server
+
+        fun log(message: Any) {
+            println("[${server.name} - ${server.uid}] $message")
+        }
     }
 
     class Builder(init: Builder.() -> Unit) {
