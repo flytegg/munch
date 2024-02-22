@@ -18,7 +18,7 @@ class Munch private constructor(
     private val publisherSettings: Builder.PublisherSettings,
     private val subscriberSettings: Builder.SubscriberSettings,
 ) {
-    private val publisher: MessagePublisher = MessagePublisher(collection, handler, publisherSettings)
+    private val publisher: MessagePublisher = MessagePublisher(this, collection, handler, publisherSettings)
     private val subscriber: MessageSubscriber = MessageSubscriber(collection, handler, subscriberSettings)
 
     init {
@@ -79,12 +79,14 @@ class Munch private constructor(
         inner class PublisherSettings {
             var period = 1L
             var messageLifetime = 500L
+            var keepAlivePeriod = 5000L
         }
 
         fun publisher(init: PublisherSettings.() -> Unit) = PublisherSettings().apply(init)
 
         inner class SubscriberSettings {
             var period = 1L
+            var timeoutServerPeriod = 10000L
         }
 
         fun subscriber(init: SubscriberSettings.() -> Unit) = SubscriberSettings().apply(init)

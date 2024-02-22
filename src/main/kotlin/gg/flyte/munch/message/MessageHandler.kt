@@ -5,6 +5,7 @@ import gg.flyte.munch.Munch.Companion.log
 import gg.flyte.munch.exception.MalformedMessageException
 import gg.flyte.munch.exception.UnknownServerException
 import gg.flyte.munch.server.ServerRegistry
+import java.time.Instant
 import java.util.*
 
 open class MessageHandler {
@@ -31,12 +32,10 @@ open class MessageHandler {
         if (sender == munch.server.id) return
         if (!message.isGlobal() && munch.server.id !in message.destinations) return
 
-        val prefix = "[DefaultMessageHandler - ${message.header}]"
-
         when (message.header) {
 
             Message.Header.MUNCH_HANDSHAKE_CONNECT -> with(ServerRegistry.register(sender, message.content)) {
-                log("$prefix Discovered new Muncher: $this")
+                log("Discovered new Muncher: $this")
 
                 munch.message {
                     destinations = setOf(id)
@@ -46,12 +45,17 @@ open class MessageHandler {
             }
 
             Message.Header.MUNCH_HANDSHAKE_CONFIRM -> ServerRegistry.register(sender, message.content).also {
-                log("$prefix Discovered new Muncher: $it")
+                log("Discovered new Muncher: $it")
             }
 
             Message.Header.MUNCH_HANDSHAKE_END -> ServerRegistry.findById(sender)?.run {
                 ServerRegistry.unregister(sender)
-                log("$prefix Muncher $this disconnected")
+                log("Muncher $this disconnected")
+            } ?: throw UnknownServerException(sender)
+
+            Message.Header.MUNCH_HANDSHAKE_KEEPALIVE -> ServerRegistry.findById(sender)?.run {
+                log("Received keep-alive from $this")
+                lastKeepAlive = Instant.now().toEpochMilli()
             } ?: throw UnknownServerException(sender)
 
             else -> handle(message)

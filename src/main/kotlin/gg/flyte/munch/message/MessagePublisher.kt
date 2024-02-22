@@ -4,6 +4,7 @@ import com.mongodb.client.MongoCollection
 import com.mongodb.client.model.Filters
 import gg.flyte.munch.Munch
 import gg.flyte.munch.Munch.Companion.log
+import gg.flyte.munch.server.ServerRegistry
 import org.bson.Document
 import java.util.*
 import java.util.concurrent.CompletableFuture
@@ -11,6 +12,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 class MessagePublisher(
+    private val munch: Munch,
     private val collection: MongoCollection<Document>,
     private val handler: MessageHandler,
     private val settings: Munch.Builder.PublisherSettings
@@ -23,6 +25,15 @@ class MessagePublisher(
         service.scheduleAtFixedRate({
             queue.poll()?.let { publish(it) }
         }, 0L, settings.period, TimeUnit.MILLISECONDS)
+
+        service.scheduleAtFixedRate({
+            if (ServerRegistry.values().isEmpty()) return@scheduleAtFixedRate
+            munch.message {
+                header = Message.Header.MUNCH_HANDSHAKE_KEEPALIVE
+                content = "ping pong"
+                destinations = ServerRegistry.values().map { it.id }.toSet()
+            }
+        }, settings.keepAlivePeriod, settings.keepAlivePeriod, TimeUnit.MILLISECONDS)
     }
 
     fun stop() {
