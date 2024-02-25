@@ -1,3 +1,3 @@
 package gg.flyte.munch.exception
 
-class MalformedMessageException : MunchException("Messages must have a defined sender uid.")
+class MalformedMessageException : MunchException("Messages must have a defined sender ID.")

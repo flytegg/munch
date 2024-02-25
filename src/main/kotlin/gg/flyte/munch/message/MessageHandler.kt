@@ -24,8 +24,8 @@ open class MessageHandler {
     }
 
     fun handleInternally(message: Message) {
-        if (message.uid in handledMessages) return
-        handledMessages += message.uid
+        if (message.id in handledMessages) return
+        handledMessages += message.id
 
         val sender = message.sender ?: throw MalformedMessageException()
 

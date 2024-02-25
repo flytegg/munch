@@ -58,8 +58,8 @@ class MessagePublisher(
     private fun clean(message: Message) {
         with(message) {
             cleanup.schedule({
-                collection.deleteOne(Filters.eq("_id", uid.toString()))
-                handler.removeHandledMessage(uid)
+                collection.deleteOne(Filters.eq("_id", id.toString()))
+                handler.removeHandledMessage(id)
             }, settings.messageLifetime, TimeUnit.MILLISECONDS)
         }
     }

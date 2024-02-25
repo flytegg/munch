@@ -5,7 +5,7 @@ import org.bson.Document
 import java.util.*
 
 data class Message(
-    val uid: UUID = UUID.randomUUID(),
+    val id: UUID = UUID.randomUUID(),
     val destinations: Set<UUID>,
     var sender: UUID? = null,
     val header: String,
@@ -13,7 +13,7 @@ data class Message(
 ) {
     fun asDocument(): Document {
         return Document().apply {
-            this["_id"] = uid.toString()
+            this["_id"] = id.toString()
             this["destinations"] = destinations.asStringSet()
             this["sender"] = sender.toString()
             this["header"] = header.uppercase()
@@ -59,7 +59,7 @@ fun List<String>.asUUIDSet(): Set<UUID> {
 
 fun Document.asMessage(): Message {
     return Message(
-        uid = UUID.fromString(getString("_id")),
+        id = UUID.fromString(getString("_id")),
         destinations = getList("destinations", String::class.java).asUUIDSet(),
         sender = UUID.fromString(getString("sender")),
         header = getString("header"),
