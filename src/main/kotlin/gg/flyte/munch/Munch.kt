@@ -86,6 +86,7 @@ class Munch private constructor(
 
         inner class SubscriberSettings {
             var period = 1L
+            var timeoutCheckPeriod = 1000L
             var timeoutServerPeriod = 10000L
         }
 

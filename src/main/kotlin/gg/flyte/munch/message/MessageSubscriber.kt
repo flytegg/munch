@@ -28,7 +28,7 @@ class MessageSubscriber(
                     ServerRegistry.unregister(it.id)
                 }
             }
-        }, settings.timeoutServerPeriod, settings.timeoutServerPeriod, TimeUnit.MILLISECONDS)
+        }, settings.timeoutCheckPeriod, settings.timeoutCheckPeriod, TimeUnit.MILLISECONDS)
     }
 
     fun stop() {
