@@ -24,8 +24,9 @@ class MessageSubscriber(
         service.scheduleAtFixedRate({
             ServerRegistry.values().forEach {
                 if (Instant.ofEpochMilli(it.lastKeepAlive).isBefore(Instant.now().minusMillis(settings.timeoutServerPeriod))) {
-                    log("Muncher $it timed out")
                     ServerRegistry.unregister(it.id)
+                    log("Muncher $it timed out")
+                    handler.onServerDisconnect()
                 }
             }
         }, settings.timeoutCheckPeriod, settings.timeoutCheckPeriod, TimeUnit.MILLISECONDS)

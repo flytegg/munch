@@ -46,11 +46,13 @@ open class MessageHandler {
 
             Message.Header.MUNCH_HANDSHAKE_CONFIRM -> ServerRegistry.register(sender, message.content).also {
                 log("Discovered new Muncher: $it")
+                onServerConnect()
             }
 
             Message.Header.MUNCH_HANDSHAKE_END -> ServerRegistry.findById(sender)?.run {
                 ServerRegistry.unregister(sender)
                 log("Muncher $this disconnected")
+                onServerDisconnect()
             } ?: throw UnknownServerException(sender)
 
             Message.Header.MUNCH_HANDSHAKE_KEEPALIVE -> ServerRegistry.findById(sender)?.run {
@@ -66,4 +68,8 @@ open class MessageHandler {
     open fun handle(message: Message) {
         throw NotImplementedError("Unable to handle $message as a MessageHandler implementation has not been provided")
     }
+
+    open fun onServerConnect() {}
+
+    open fun onServerDisconnect() {}
 }
