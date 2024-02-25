@@ -12,6 +12,7 @@ fun main() {
         }
         handler = TestMessageHandler
         server = "test02"
+        logLevel = Munch.LogLevel.LOW
     }.build()
 
     munch.start()

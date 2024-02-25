@@ -57,7 +57,7 @@ open class MessageHandler {
             } ?: throw UnknownServerException(sender)
 
             Message.Header.MUNCH_HANDSHAKE_KEEPALIVE -> ServerRegistry.findById(sender)?.run {
-                log("Received keep-alive from $this")
+                log("Received keep-alive from $this", Munch.LogLevel.LOW)
                 lastKeepAlive = Instant.now().toEpochMilli()
             } ?: throw UnknownServerException(sender)
 

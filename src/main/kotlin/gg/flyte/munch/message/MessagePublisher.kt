@@ -49,7 +49,7 @@ class MessagePublisher(
 
     private fun publish(message: Message) {
         with(message) {
-            log("Published $this")
+            log("Published $this", Munch.LogLevel.LOW)
             collection.insertOne(asDocument())
             clean(this)
         }

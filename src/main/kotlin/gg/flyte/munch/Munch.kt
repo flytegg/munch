@@ -17,13 +17,17 @@ class Munch private constructor(
     val handler: MessageHandler = MessageHandler(),
     private val publisherSettings: Builder.PublisherSettings,
     private val subscriberSettings: Builder.SubscriberSettings,
+    logLevel: LogLevel
 ) {
     private val publisher: MessagePublisher = MessagePublisher(this, collection, handler, publisherSettings)
     private val subscriber: MessageSubscriber = MessageSubscriber(collection, handler, subscriberSettings)
 
     init {
         Companion.server = server
+        Companion.logLevel = logLevel
+
         handler.injectMunch(this)
+
         message {
             header = Message.Header.MUNCH_HANDSHAKE_CONNECT
             content = server.name
@@ -54,12 +58,17 @@ class Munch private constructor(
         handler.stop()
     }
 
+    enum class LogLevel {
+        LOW, MEDIUM, HIGH
+    }
+
     companion object {
         val NULL_UUID = UUID(0, 0)
         private lateinit var server: Server
+        private lateinit var logLevel: LogLevel
 
-        fun log(message: Any) {
-            println("[${server.name} - ${server.id}] $message")
+        fun log(message: Any, level: LogLevel = LogLevel.MEDIUM) {
+            if (level >= logLevel) println("[${server.name} - ${server.id}] $message")
         }
     }
 
@@ -96,6 +105,7 @@ class Munch private constructor(
         var server by Delegates.notNull<String>()
         private var publisherSettings: PublisherSettings? = null
         private var subscriberSettings: SubscriberSettings? = null
+        var logLevel: LogLevel = LogLevel.MEDIUM
 
         init {
             apply(init)
@@ -107,7 +117,8 @@ class Munch private constructor(
                 server = Server(UUID.randomUUID(), server),
                 handler = handler,
                 publisherSettings = publisherSettings ?: PublisherSettings(),
-                subscriberSettings = subscriberSettings ?: SubscriberSettings()
+                subscriberSettings = subscriberSettings ?: SubscriberSettings(),
+                logLevel = logLevel
             )
         }
     }
