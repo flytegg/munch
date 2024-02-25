@@ -58,9 +58,9 @@ open class MessageHandler {
                 lastKeepAlive = Instant.now().toEpochMilli()
             } ?: throw UnknownServerException(sender)
 
-            else -> handle(message)
-
         }
+
+        handle(message)
     }
 
     open fun handle(message: Message) {
