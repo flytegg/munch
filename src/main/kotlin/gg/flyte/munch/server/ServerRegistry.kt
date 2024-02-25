@@ -1,11 +1,14 @@
 package gg.flyte.munch.server
 
+import java.time.Instant
 import java.util.*
 
 object ServerRegistry {
     private val servers = mutableMapOf<UUID, Server>()
 
-    fun register(id: UUID, name: String): Server = Server(id, name).also { servers += id to it }
+    fun register(id: UUID, name: String): Server = Server(id, name, Instant.now().toEpochMilli()).also {
+        servers += id to it
+    }
 
     fun unregister(id: UUID) = servers.remove(id)
 
