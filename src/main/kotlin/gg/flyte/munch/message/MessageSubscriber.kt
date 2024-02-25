@@ -26,7 +26,7 @@ class MessageSubscriber(
                 if (Instant.ofEpochMilli(it.lastKeepAlive).isBefore(Instant.now().minusMillis(settings.timeoutServerPeriod))) {
                     ServerRegistry.unregister(it.id)
                     log("Muncher $it timed out")
-                    handler.onServerDisconnect()
+                    handler.onServerDisconnect(it)
                 }
             }
         }, settings.timeoutCheckPeriod, settings.timeoutCheckPeriod, TimeUnit.MILLISECONDS)

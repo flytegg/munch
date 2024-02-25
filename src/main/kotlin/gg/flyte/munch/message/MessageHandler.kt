@@ -4,6 +4,7 @@ import gg.flyte.munch.Munch
 import gg.flyte.munch.Munch.Companion.log
 import gg.flyte.munch.exception.MalformedMessageException
 import gg.flyte.munch.exception.UnknownServerException
+import gg.flyte.munch.server.Server
 import gg.flyte.munch.server.ServerRegistry
 import java.time.Instant
 import java.util.*
@@ -46,13 +47,13 @@ open class MessageHandler {
 
             Message.Header.MUNCH_HANDSHAKE_CONFIRM -> ServerRegistry.register(sender, message.content).also {
                 log("Discovered new Muncher: $it")
-                onServerConnect()
+                onServerConnect(it)
             }
 
             Message.Header.MUNCH_HANDSHAKE_END -> ServerRegistry.findById(sender)?.run {
                 ServerRegistry.unregister(sender)
                 log("Muncher $this disconnected")
-                onServerDisconnect()
+                onServerDisconnect(this)
             } ?: throw UnknownServerException(sender)
 
             Message.Header.MUNCH_HANDSHAKE_KEEPALIVE -> ServerRegistry.findById(sender)?.run {
@@ -69,7 +70,7 @@ open class MessageHandler {
         throw NotImplementedError("Unable to handle $message as a MessageHandler implementation has not been provided")
     }
 
-    open fun onServerConnect() {}
+    open fun onServerConnect(server: Server) {}
 
-    open fun onServerDisconnect() {}
+    open fun onServerDisconnect(server: Server) {}
 }
