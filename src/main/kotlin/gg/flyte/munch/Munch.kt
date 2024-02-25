@@ -49,8 +49,9 @@ class Munch private constructor(
         handler.stop()
     }
 
-    fun message(builder: Message.Builder.() -> Unit) =
-        publisher.queue(Message.Builder(builder).build().apply { sender = server.id })
+    fun message(builder: Message.Builder.() -> Unit): Message = Message.Builder(builder).build()
+        .apply { sender = server.id }
+        .also { publisher.queue(it) }
 
     fun terminate() {
         publisher.terminate()
